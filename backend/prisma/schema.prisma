@@ -18,6 +18,8 @@ model User {
   createdAt DateTime @default(now())
 }
 
+
+
 model Job {
   id        String  @id @default(uuid())
   title     String
@@ -26,8 +28,20 @@ model Job {
   clientId  String
   client    User    @relation(fields: [clientId], references: [id], name: "ClientJobs")
   applications Application[]
+  deleted   Boolean  @default(false) // ✅ Soft delete flag
   createdAt DateTime @default(now())
+
+
+  // 🔹 New Fields for Sorting & Filtering
+  category     String?  // e.g., "Software", "Marketing"
+  location     String?  // e.g., "Remote", "New York"
+  type         String?  // e.g., "Full-time", "Part-time"
+  experience   String?  // e.g., "Junior", "Mid", "Senior"
+  skills      String[]  // Array of required skills
+  status       String   @default("open") // "open", "closed"
 }
+
+
 
 model Application {
   id        String  @id @default(uuid())
