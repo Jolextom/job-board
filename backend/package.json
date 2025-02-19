@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "dev": "ts-node-dev src/index.ts",
-    "seed": "ts-node prisma/seed.ts"
+    "start": "ts-node src/server.ts",
+    "dev": "ts-node-dev src/server.ts",
+    "seed": "ts-node prisma/seed.ts",
+    "test": "jest --runInBand --detectOpenHandles"
   },
   "keywords": [],
   "author": "",

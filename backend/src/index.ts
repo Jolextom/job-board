@@ -44,5 +44,5 @@ app.use("*", (req, res) => {
 });
 
 app.use(errorHandlerMiddleware as express.ErrorRequestHandler);
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+export default app;
