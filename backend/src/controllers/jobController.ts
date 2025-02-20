@@ -48,6 +48,23 @@ export const getJobs = async (req: Request, res: Response) => {
       orderBy = { budget: "asc" };
       break;
   }
+
+  let budgetFilter: any = {};
+  if (budgetRange) {
+    const sanitizedRange = budgetRange.replace(/,/g, ""); // Remove commas
+    const [min, max] = sanitizedRange.split("-").map(Number);
+
+    if (isNaN(min) || isNaN(max)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message:
+          "Invalid budget range format. Use numbers only (e.g., 80000-90000).",
+      });
+    }
+
+    budgetFilter = { gte: min, lte: max };
+  }
+
   // ✅ Filtering conditions
   const where: any = {
     deleted: false,
@@ -61,11 +78,7 @@ export const getJobs = async (req: Request, res: Response) => {
     ...(type && { type }),
     ...(experience && { experience }),
     ...(skills && { skills: { hasSome: skills.split(",") } }), // Prisma's `hasSome` for array fields
-    ...(budgetRange &&
-      (() => {
-        const [min, max] = budgetRange.split("-").map(Number);
-        return { budget: { gte: min, lte: max } };
-      })()),
+    ...(budgetRange && { budget: budgetFilter }), // ✅ Safe budget filtering
   };
 
   // ✅ Fetch Jobs

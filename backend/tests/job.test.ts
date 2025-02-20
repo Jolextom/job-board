@@ -1,8 +1,6 @@
 import request from "supertest";
 import app from "../src/index"; // Update with your Express app path
 
-jest.setTimeout(20000); // Set global timeout to 20 seconds
-
 describe("Job API", () => {
   it("should fetch jobs successfully", async () => {
     const res = await request(app).get("/api/jobs");
