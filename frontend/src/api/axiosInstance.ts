@@ -27,10 +27,12 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Handle 401 (Unauthorized) globally
-      if (error.response.status === 401) {
+      // Avoid redirecting if the failed request is to the login endpoint
+      const isLoginRequest = error.config.url.includes("/auth/login"); // Adjust path to match your login endpoint
+
+      if (error.response.status === 401 && !isLoginRequest) {
         localStorage.removeItem("token");
-        window.location.href = "/login"; // Redirect to login
+        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

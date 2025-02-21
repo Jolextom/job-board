@@ -2,7 +2,7 @@ import axiosInstance from "./axiosInstance";
 
 export const fetchJobs = async () => {
   const response = await axiosInstance.get("/jobs");
-  console.log(response);
+  console.log(response.data);
   return response.data;
 };
 

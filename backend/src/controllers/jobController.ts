@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import prisma from "../../utils/prisma"; // ✅ Prisma Singleton
+import { prisma } from "../../utils/prisma"; // ✅ Prisma Singleton
 import { jobSchema } from "../middlewares/validate";
 import { StatusCodes } from "http-status-codes";
 import customErrors from "http-errors";
 
-const { Forbidden, NotFound } = customErrors;
+const { Forbidden, NotFound, BadRequest } = customErrors;
 
 // ✅ Create Job (Client Only)
 export const createJob = async (req: Request, res: Response) => {
@@ -23,65 +23,68 @@ export const createJob = async (req: Request, res: Response) => {
 
 // ✅ Get All Jobs (Freelancers & Clients)
 export const getJobs = async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
+  const page = parseInt(String(req.query.page)) || 1;
+  const limit = parseInt(String(req.query.limit)) || 10;
   const skip = (page - 1) * limit;
 
-  const search = req.query.search as string;
-  const category = req.query.category as string;
-  const type = req.query.type as string;
-  const experience = req.query.experience as string;
-  const skills = req.query.skills as string; // Expected as comma-separated values
-  const budgetRange = req.query.budgetRange as string; // Expected as "min-max"
-  const sort = req.query.sort as string; // "latest" | "oldest"
+  const search = req.query.search as string | undefined;
+  const category = req.query.category as string | undefined;
+  const type = req.query.type as string | undefined;
+  const experience = req.query.experience as string | undefined;
+  const skills = req.query.skills as string | undefined;
+  const budgetRange = req.query.budgetRange as string | undefined;
+  const sort = req.query.sort as string | undefined;
 
-  // ✅ Sorting Logic
-  let orderBy: any = { createdAt: "desc" }; // Default: latest
-  switch (sort) {
-    case "oldest":
-      orderBy = { createdAt: "asc" };
-      break;
-    case "budget_high":
-      orderBy = { budget: "desc" };
-      break;
-    case "budget_low":
-      orderBy = { budget: "asc" };
-      break;
+  // Validate and set sorting
+  let orderBy: { [key: string]: "asc" | "desc" } = { createdAt: "desc" };
+  if (sort) {
+    switch (sort) {
+      case "oldest":
+        orderBy = { createdAt: "asc" };
+        break;
+      case "budget_high":
+        orderBy = { budget: "desc" };
+        break;
+      case "budget_low":
+        orderBy = { budget: "asc" };
+        break;
+      default:
+        throw new BadRequest(
+          "Invalid sort parameter. Use 'oldest', 'budget_high', or 'budget_low'."
+        );
+    }
   }
 
-  let budgetFilter: any = {};
+  // Budget range filter
+  let budgetFilter: { gte?: number; lte?: number } = {};
   if (budgetRange) {
-    const sanitizedRange = budgetRange.replace(/,/g, ""); // Remove commas
+    const sanitizedRange = budgetRange.replace(/,/g, "");
     const [min, max] = sanitizedRange.split("-").map(Number);
-
     if (isNaN(min) || isNaN(max)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message:
-          "Invalid budget range format. Use numbers only (e.g., 80000-90000).",
-      });
+      throw new BadRequest(
+        "Invalid budget range format. Use numbers only (e.g., 80000-90000)."
+      );
     }
-
     budgetFilter = { gte: min, lte: max };
   }
 
-  // ✅ Filtering conditions
-  const where: any = {
+  // Build where clause with stricter typing
+  const where = {
     deleted: false,
     ...(search && {
       OR: [
-        { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
+        { title: { contains: search, mode: "insensitive" as const } },
+        { description: { contains: search, mode: "insensitive" as const } },
       ],
     }),
     ...(category && { category }),
     ...(type && { type }),
     ...(experience && { experience }),
-    ...(skills && { skills: { hasSome: skills.split(",") } }), // Prisma's `hasSome` for array fields
-    ...(budgetRange && { budget: budgetFilter }), // ✅ Safe budget filtering
+    ...(skills && { skills: { hasSome: skills.split(",") } }),
+    ...(budgetRange && { budget: budgetFilter }),
   };
 
-  // ✅ Fetch Jobs
+  // Fetch jobs
   const jobs = await prisma.job.findMany({
     where,
     orderBy,
@@ -94,7 +97,6 @@ export const getJobs = async (req: Request, res: Response) => {
     },
   });
 
-  // ✅ Get total job count
   const totalJobs = await prisma.job.count({ where });
 
   res.status(StatusCodes.OK).json({

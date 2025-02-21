@@ -8,18 +8,17 @@ const JobListing = () => {
 
     const { data: jobs, isLoading, error } = useJobs();
 
-    if (isLoading) return <p className='bg-red-900'>Loading jobs...</p>;
+    if (isLoading) return <p>Loading jobs...</p>;
     if (error) return <p>Error loading jobs</p>;
 
-
-    console.log(jobs)
+    const { jobs: jobList, totalJobs } = jobs.data;
 
     return (
         <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold">
                     Recommended jobs
-                    <span className="ml-2 text-sm bg-gray-200 px-2 py-1 rounded-full">386</span>
+                    <span className="ml-2 text-sm bg-gray-200 px-2 py-1 rounded-full">{totalJobs}</span>
                 </h2>
                 <div className="flex items-center space-x-2 text-sm">
                     <span className="text-gray-500">Sort by:</span>
@@ -29,35 +28,22 @@ const JobListing = () => {
             </div>
 
             <div className="space-y-4">
-                <JobCard
-                    company="Amazon"
-                    position="Senior UI/UX Designer"
-                    location="San Francisco, CA"
-                    date="20 May, 2023"
-                    salary="$250/hr"
-                    tags={['Part time', 'Senior level', 'Distant', 'Project work']}
-                    backgroundColor="bg-orange-100"
-                />
+                {
+                    jobList.map((job) => (
+                        <JobCard
+                            key={job.id}
+                            company="Amazon"
+                            position={job.title}
+                            location="San Francisco, CA"
+                            date="20 May, 2023"
+                            salary={job.budget}
+                            tags={['Part time', 'Senior level', 'Distant', 'Project work']}
+                            backgroundColor="bg-orange-100" />
 
-                <JobCard
-                    company="Google"
-                    position="Junior UI/UX Designer"
-                    location="California, CA"
-                    date="4 Feb, 2023"
-                    salary="$150/hr"
-                    tags={['Full time', 'Junior level', 'Distant', 'Project work', 'Flexible Schedule']}
-                    backgroundColor="bg-green-100"
-                />
+                    ))}
 
-                <JobCard
-                    company="Dribbble"
-                    position="Senior Motion Designer"
-                    location="New York, NY"
-                    date="29 Jan, 2023"
-                    salary="$260/hr"
-                    tags={['Part time', 'Senior level', 'Full Day', 'Shift work']}
-                    backgroundColor="bg-purple-100"
-                />
+
+
             </div>
         </div>
     )
