@@ -1,7 +1,7 @@
 import axiosInstance from "./axiosInstance";
 
-export const fetchJobs = async () => {
-  const response = await axiosInstance.get("/jobs");
+export const fetchJobs = async ({ pageParam = 1 }) => {
+  const response = await axiosInstance.get(`/jobs?page=${pageParam}`);
   console.log(response.data);
   return response.data;
 };

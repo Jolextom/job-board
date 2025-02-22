@@ -1,17 +1,22 @@
 import { Settings2, BookmarkPlus } from 'lucide-react';
-
 import { useJobs } from "../hooks/useJobs";
 
 const JobListing = () => {
-
-
-
-    const { data: jobs, isLoading, error } = useJobs();
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        error
+    } = useJobs();
 
     if (isLoading) return <p>Loading jobs...</p>;
     if (error) return <p>Error loading jobs</p>;
 
-    const { jobs: jobList, totalJobs } = jobs.data;
+    const jobList = data?.pages.flatMap(page => page.data.jobs) || [];
+    const totalJobs = data?.pages[0]?.data.totalJobs || 0;
+
 
     return (
         <div className="flex-1">
@@ -28,26 +33,37 @@ const JobListing = () => {
             </div>
 
             <div className="space-y-4">
-                {
-                    jobList.map((job) => (
-                        <JobCard
-                            key={job.id}
-                            company="Amazon"
-                            position={job.title}
-                            location="San Francisco, CA"
-                            date="20 May, 2023"
-                            salary={job.budget}
-                            tags={['Part time', 'Senior level', 'Distant', 'Project work']}
-                            backgroundColor="bg-orange-100" />
-
-                    ))}
-
-
-
+                {jobList.map((job) => (
+                    <JobCard
+                        key={job.id}
+                        company="Amazon"
+                        position={job.title}
+                        location="San Francisco, CA"
+                        date="20 May, 2023"
+                        salary={job.budget}
+                        tags={['Part time', 'Senior level', 'Distant', 'Project work']}
+                        backgroundColor="bg-orange-100"
+                    />
+                ))}
             </div>
+
+            {/* Load More Button */}
+            {hasNextPage && (
+                <div className="mt-6 text-center">
+                    <button
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                        className="px-4 py-2 bg-black text-white rounded-lg"
+                    >
+                        {isFetchingNextPage ? "Loading..." : "Load More"}
+                    </button>
+                </div>
+            )}
         </div>
-    )
-}
+    );
+};
+
+
 
 
 const CompanyLogo = ({ company }: { company: string }) => {

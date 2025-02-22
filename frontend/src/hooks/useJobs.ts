@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import {
   fetchJobs,
   fetchJobById,
@@ -9,9 +14,15 @@ import {
 
 // Fetch all jobs
 export const useJobs = () => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["jobs"],
     queryFn: fetchJobs,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.data.currentPage < lastPage.data.totalPages
+        ? lastPage.data.currentPage + 1
+        : undefined;
+    },
   });
 };
 
